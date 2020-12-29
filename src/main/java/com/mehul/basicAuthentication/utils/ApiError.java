@@ -5,7 +5,7 @@ import org.springframework.http.HttpStatus;
 import java.util.Arrays;
 import java.util.List;
 
-public class ApiError {
+public class ApiError extends Throwable {
     private HttpStatus status;
     private String message;
     private List<String> errors;

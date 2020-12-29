@@ -1,48 +1,55 @@
 package com.mehul.basicAuthentication.entities;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import java.util.Objects;
+import javax.persistence.*;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
-@Table(name = "user")
+@Table(name = "user",
+        uniqueConstraints = {
+        @UniqueConstraint(columnNames = "username"),
+        @UniqueConstraint(columnNames = "email")
+})
 public class UserEntity {
-
-    private String id;
-
-    private String name;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     private String userName;
 
-    private String password;
-
     private String email;
 
-    @Id
-    public String getId() {
+    private String password;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(	name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id"))
+    private Set<Role> roles = new HashSet<>();
+
+    public UserEntity() {
+    }
+
+    public UserEntity(String username, String email, String password) {
+        this.userName = username;
+        this.email = email;
+        this.password = password;
+    }
+
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
 
     public String getUserName() {
         return userName;
     }
 
-    public void setUserName(String userName) {
-        this.userName = userName;
+    public void setUserName(String username) {
+        this.userName = username;
     }
 
     public String getEmail() {
@@ -61,31 +68,12 @@ public class UserEntity {
         this.password = password;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        UserEntity userEntity = (UserEntity) o;
-        return Objects.equals(id, userEntity.id) &&
-                Objects.equals(name, userEntity.name) &&
-                Objects.equals(userName, userEntity.userName) &&
-                Objects.equals(email, userEntity.email);
+    public Set<Role> getRoles() {
+        return roles;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, name, userName, email);
-    }
-
-
-    @Override
-    public String toString() {
-        return "User{" +
-                "id='" + id + '\'' +
-                ", name='" + name + '\'' +
-                ", userName='" + userName + '\'' +
-                ", email='" + email + '\'' +
-                '}';
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
     }
 
 }

@@ -4,26 +4,36 @@
  */
 package com.mehul.basicAuthentication.services;
 
+import com.mehul.basicAuthentication.entities.Role;
 import com.mehul.basicAuthentication.entities.UserEntity;
+import com.mehul.basicAuthentication.pojo.EnumRole;
 import com.mehul.basicAuthentication.pojo.SignUpRequest;
 import com.mehul.basicAuthentication.pojo.SignUpResponse;
+import com.mehul.basicAuthentication.repository.RoleRepository;
 import com.mehul.basicAuthentication.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 @Service
 @Component
 public class SignUpService {
 
-    private final UserRepository userRepository;
+    @Autowired
+    private UserRepository userRepository;
 
-    public SignUpService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
+    @Autowired
+    private RoleRepository roleRepository;
+
+//    public SignUpService(UserRepository userRepository) {
+//        this.userRepository = userRepository;
+//    }
 
     // business logic for sign up with some validations
     public SignUpResponse signUp(SignUpRequest signUpRequest) {
@@ -48,12 +58,39 @@ public class SignUpService {
     private String createUser(SignUpRequest signUpRequest) {
         UserEntity userEntity = new UserEntity();
         userEntity.setEmail(signUpRequest.getEmail());
-        userEntity.setName(signUpRequest.getName());
         userEntity.setUserName(signUpRequest.getUserName());
         userEntity.setPassword(BCrypt.hashpw(signUpRequest.getPassword(), BCrypt.gensalt(12)));
-        userEntity.setId(UUID.randomUUID().toString());
+        List<String> strRoles = signUpRequest.getRoles();
+        Set<Role> roles = new HashSet<>();
+        if (strRoles == null) {
+            Role userRole = roleRepository.findByName(EnumRole.ROLE_USER)
+                    .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+            roles.add(userRole);
+        } else {
+            strRoles.forEach(role -> {
+                switch (role) {
+                    case "admin":
+                        Role adminRole = roleRepository.findByName(EnumRole.ROLE_ADMIN)
+                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                        roles.add(adminRole);
+
+                        break;
+                    case "mod":
+                        Role modRole = roleRepository.findByName(EnumRole.ROLE_MODERATOR)
+                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                        roles.add(modRole);
+
+                        break;
+                    default:
+                        Role userRole = roleRepository.findByName(EnumRole.ROLE_USER)
+                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                        roles.add(userRole);
+                }
+            });
+        }
+        userEntity.setRoles(roles);
         userRepository.save(userEntity);
-        return "Welcome " + signUpRequest.getName() + ", account created successfully";
+        return "Welcome " + signUpRequest.getUserName() + ", account created successfully";
     }
 
     // basic regex to valid email: https://www.geeksforgeeks.org/check-email-address-valid-not-java/
