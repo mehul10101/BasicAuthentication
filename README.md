@@ -1,3 +1,8 @@
+https://mehul3198.medium.com/basic-authentication-application-jwt-and-role-based-authentication-spring-boot-mysql-2f444e0d4868
+
+please checkout above link.
+
+
 # BasicAuthentication
 
 ** Technologies Used **
